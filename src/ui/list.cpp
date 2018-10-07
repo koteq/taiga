@@ -312,7 +312,19 @@ int CALLBACK AnimeListCompareProc(LPARAM lParam1, LPARAM lParam2,
     }
   }
 
-  return ListViewCompare(lParam1, lParam2, lParamSort, false);
+  if (1 /* Persistent sorting by Season */) {
+    win::ListView* list = reinterpret_cast<win::ListView*>(lParamSort);
+    auto item1 = AnimeDatabase.FindItem(list->GetItemParam(lParam1));
+    auto item2 = AnimeDatabase.FindItem(list->GetItemParam(lParam2));
+    if (item1 && item2) {
+      anime::Season season1((*item1).GetDateStart());
+      anime::Season season2((*item2).GetDateStart());
+      if (season1 != season2)
+        return CompareValues<anime::Season>(season1, season2) * -1;
+    }
+  }
+
+  return ListViewCompareProc(lParam1, lParam2, lParamSort);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
