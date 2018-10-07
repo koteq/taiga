@@ -310,9 +310,52 @@ INT_PTR MainDialog::DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
       toolbar_wm.ShowMenu();
       return TRUE;
     }
+
+    // Draw anime image
+    case WM_DRAWITEM: {
+      if (wParam == IDC_STATIC_ANIME_IMG) {
+        LPDRAWITEMSTRUCT dis = reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
+        win::Rect rect = dis->rcItem;
+        win::Dc dc = dis->hDC;
+        // Paint border
+        dc.FillRect(rect, ::GetSysColor(COLOR_ACTIVEBORDER));
+        rect.Inflate(-1, -1);
+        dc.FillRect(rect, ::GetSysColor(COLOR_WINDOW));
+        rect.Inflate(-1, -1);
+        // Paint image
+        if (const auto image = ui::image_db.GetImage(anime_id_)) {
+          dc.SetStretchBltMode(HALFTONE);
+          dc.StretchBlt(rect.left, rect.top, rect.Width(), rect.Height(),
+            image->dc.Get(),
+            0, 0, image->rect.Width(), image->rect.Height(),
+            SRCCOPY);
+        }
+        else {
+          dc.EditFont(nullptr, 64, TRUE);
+          dc.SetBkMode(TRANSPARENT);
+          dc.SetTextColor(::GetSysColor(COLOR_ACTIVEBORDER));
+          dc.DrawText(L"?", 1, rect, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+          DeleteObject(dc.DetachFont());
+        }
+        dc.DetachDc();
+        return TRUE;
+      }
+      break;
+    }
   }
 
   return DialogProcDefault(hwnd, uMsg, wParam, lParam);
+}
+
+int MainDialog::GetCurrentAnimeId() const {
+  return anime_id_;
+}
+
+void MainDialog::SetCurrentAnimeId(int anime_id) {
+  anime_id_ = anime_id;
+  ui::image_db.Load(anime_id_, true);
+  image_label_.InvalidateRect();
+  //RedrawWindow();
 }
 
 BOOL MainDialog::PreTranslateMessage(MSG* pMsg) {
@@ -805,6 +848,21 @@ void MainDialog::UpdateControlPositions(const SIZE* size) {
   } else {
     rect_content_ = rect_client;
   }
+
+  // Set poster image
+  win::Rect rect_image = rect_client;
+  rect_image.top += ScaleY(200);
+  rect_image.left += ScaleX(6);
+  rect_image.right = rect_image.left + ScaleX(128);
+  if (const auto image = ui::image_db.GetImage(anime_id_)) {
+    rect_image = ResizeRect(rect_image,
+      image->rect.Width(), image->rect.Height(),
+      true, true, false);
+  }
+  else {
+    rect_image.bottom = rect_image.top + static_cast<int>(rect_image.Width() * 1.4);
+  }
+  image_label_.SetPosition(nullptr, rect_image);
 
   // Resize content
   DlgAnimeList.SetPosition(nullptr, rect_content_);
