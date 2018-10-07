@@ -330,6 +330,9 @@ void OnLibraryEntryImageChange(int id) {
 
   if (DlgSeason.IsWindow())
     DlgSeason.RefreshList(true);
+
+  if (DlgMain.GetCurrentAnimeId() == id)
+    DlgMain.RedrawWindow();
 }
 
 void OnLibraryGetSeason() {

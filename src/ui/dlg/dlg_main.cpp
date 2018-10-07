@@ -61,6 +61,8 @@ MainDialog DlgMain;
 MainDialog::MainDialog() {
   navigation.parent = this;
   search_bar.parent = this;
+  treeview.parent = this;
+  image_label_.parent = this;
 
   RegisterDlgClass(L"TaigaMainW");
 }
@@ -125,6 +127,8 @@ BOOL MainDialog::OnInitDialog() {
 }
 
 void MainDialog::CreateDialogControls() {
+  // Create image label
+  image_label_.Attach(GetDlgItem(IDC_STATIC_ANIME_IMG));
   // Create rebar
   rebar.Attach(GetDlgItem(IDC_REBAR_MAIN));
   // Create menu toolbar
@@ -348,7 +352,8 @@ int MainDialog::GetCurrentAnimeId() const {
 void MainDialog::SetCurrentAnimeId(int anime_id) {
   anime_id_ = anime_id;
   ImageDatabase.Load(anime_id_, true, true);
-  RedrawWindow();
+  image_label_.InvalidateRect();
+  //RedrawWindow();
 }
 
 BOOL MainDialog::PreTranslateMessage(MSG* pMsg) {
@@ -844,6 +849,22 @@ void MainDialog::UpdateControlPositions(const SIZE* size) {
   } else {
     rect_content_ = rect_client;
   }
+
+  // Set poster image
+  win::Rect rect_image = rect_client;
+  rect_image.top += ScaleY(200);
+  rect_image.left += ScaleX(6);
+  rect_image.right = rect_image.left + ScaleX(128);
+  auto image = ImageDatabase.GetImage(anime_id_);
+  if (image) {
+    rect_image = ResizeRect(rect_image,
+      image->rect.Width(), image->rect.Height(),
+      true, true, false);
+  }
+  else {
+    rect_image.bottom = rect_image.top + static_cast<int>(rect_image.Width() * 1.4);
+  }
+  image_label_.SetPosition(nullptr, rect_image);
 
   // Resize content
   DlgAnimeList.SetPosition(nullptr, rect_content_);
