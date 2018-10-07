@@ -303,9 +303,52 @@ INT_PTR MainDialog::DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
       toolbar_wm.ShowMenu();
       return TRUE;
     }
+
+    // Draw anime image
+    case WM_DRAWITEM: {
+      if (wParam == IDC_STATIC_ANIME_IMG) {
+        LPDRAWITEMSTRUCT dis = reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
+        win::Rect rect = dis->rcItem;
+        win::Dc dc = dis->hDC;
+        // Paint border
+        dc.FillRect(rect, ::GetSysColor(COLOR_ACTIVEBORDER));
+        rect.Inflate(-1, -1);
+        dc.FillRect(rect, ::GetSysColor(COLOR_WINDOW));
+        rect.Inflate(-1, -1);
+        // Paint image
+        auto image = ImageDatabase.GetImage(anime_id_);
+        if (anime::IsValidId(anime_id_) && image) {
+          dc.SetStretchBltMode(HALFTONE);
+          dc.StretchBlt(rect.left, rect.top, rect.Width(), rect.Height(),
+            image->dc.Get(),
+            0, 0, image->rect.Width(), image->rect.Height(),
+            SRCCOPY);
+        }
+        else {
+          dc.EditFont(nullptr, 64, TRUE);
+          dc.SetBkMode(TRANSPARENT);
+          dc.SetTextColor(::GetSysColor(COLOR_ACTIVEBORDER));
+          dc.DrawText(L"?", 1, rect, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+          DeleteObject(dc.DetachFont());
+        }
+        dc.DetachDc();
+        return TRUE;
+      }
+      break;
+    }
   }
 
   return DialogProcDefault(hwnd, uMsg, wParam, lParam);
+}
+
+int MainDialog::GetCurrentAnimeId() const {
+  return anime_id_;
+}
+
+void MainDialog::SetCurrentAnimeId(int anime_id) {
+  anime_id_ = anime_id;
+  ImageDatabase.Load(anime_id_, true, true);
+  RedrawWindow();
 }
 
 BOOL MainDialog::PreTranslateMessage(MSG* pMsg) {

@@ -85,6 +85,8 @@ public:
   void UpdateStatusTimer();
   void UpdateTip();
   void UpdateTitle();
+  int GetCurrentAnimeId() const;
+  void SetCurrentAnimeId(int anime_id);
 
   class Navigation {
   public:
@@ -161,6 +163,7 @@ public:
 
 private:
   win::Rect rect_content_, rect_sidebar_;
+  int anime_id_;
 };
 
 extern MainDialog DlgMain;

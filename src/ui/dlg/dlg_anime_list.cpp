@@ -743,6 +743,7 @@ LRESULT AnimeListDialog::OnListNotify(LPARAM lParam) {
       auto anime_id = static_cast<int>(lplv->lParam);
       if (lplv->uNewState)
         listview.RefreshItem(lplv->iItem);
+	    DlgMain.SetCurrentAnimeId(anime_id);
       break;
     }
 
