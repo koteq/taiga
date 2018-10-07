@@ -19,6 +19,7 @@
 #include <windowsx.h>
 
 #include "base/string.h"
+#include "media/anime_util.h"
 #include "media/library/queue.h"
 #include "sync/sync.h"
 #include "taiga/debug.h"
@@ -47,6 +48,10 @@ LRESULT MainDialog::MainTree::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
         SetSharedCursor(IDC_ARROW);
         return TRUE;
       }
+      break;
+    }
+    case WM_PAINT: {
+      parent->image_label_.InvalidateRect();
       break;
     }
   }
@@ -190,6 +195,22 @@ LRESULT MainDialog::EditSearch::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
   return WindowProcDefault(hwnd, uMsg, wParam, lParam);
 }
 
+/* Poster image */
+
+LRESULT MainDialog::ImageLabel::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+  switch (uMsg) {
+    case WM_SETCURSOR: {
+      if (anime::IsValidId(parent->anime_id_)) {
+        SetSharedCursor(IDC_HAND);
+        return TRUE;
+      }
+      break;
+    }
+  }
+
+  return WindowProcDefault(hwnd, uMsg, wParam, lParam);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 /* Toolbar */
@@ -237,6 +258,15 @@ BOOL MainDialog::OnCommand(WPARAM wParam, LPARAM lParam) {
           }
           break;
       }
+    }
+  }
+
+  // Poster image
+  if (LOWORD(wParam) == IDC_STATIC_ANIME_IMG &&
+    HIWORD(wParam) == STN_CLICKED) {
+    if (anime::IsValidId(anime_id_)) {
+      ExecuteCommand(L"ViewAnimePage", 0, anime_id_);
+      return TRUE;
     }
   }
 

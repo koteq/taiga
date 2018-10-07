@@ -68,6 +68,8 @@ MainDialog DlgMain;
 MainDialog::MainDialog() {
   navigation.parent = this;
   search_bar.parent = this;
+  treeview.parent = this;
+  image_label_.parent = this;
 
   RegisterDlgClass(L"TaigaMainW");
 }
@@ -132,6 +134,8 @@ BOOL MainDialog::OnInitDialog() {
 }
 
 void MainDialog::CreateDialogControls() {
+  // Create image label
+  image_label_.Attach(GetDlgItem(IDC_STATIC_ANIME_IMG));
   // Create rebar
   rebar.Attach(GetDlgItem(IDC_REBAR_MAIN));
   // Create menu toolbar
